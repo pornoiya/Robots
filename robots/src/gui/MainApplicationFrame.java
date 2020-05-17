@@ -1,13 +1,15 @@
 package gui;
 
-import java.awt.*;
-import java.awt.desktop.SystemEventListener;
-import java.awt.event.*;
-import java.util.Locale;
+import log.Logger;
 
 import javax.swing.*;
-
-import log.Logger;
+import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 
 /**
@@ -31,6 +33,11 @@ public class MainApplicationFrame extends JFrame{
 
         setContentPane(desktopPane);
 
+        var jsonStatesFile = new File("windowStates.json");
+        var states = new HashMap<String, HashMap>();
+        if (jsonStatesFile.exists() && !jsonStatesFile.isDirectory()) {
+            states = WindowStateControl.readState(jsonStatesFile);
+        }
 
         LogWindow logWindow = createLogWindow();
         addWindow(logWindow);
@@ -39,13 +46,25 @@ public class MainApplicationFrame extends JFrame{
         gameWindow.setSize(400,  400);
         addWindow(gameWindow);
 
-        addWindowListener(createExitActionListener());
+        var windows = new ArrayList<JInternalFrame>();
+        windows.add(gameWindow);
+        windows.add(logWindow);
+        addWindowListener(createExitActionListener(windows));
+
+        if(states != null){
+            for (JInternalFrame w: windows){
+                if (states.containsKey(w.getTitle())){
+                    var currentWindowState = states.get(w.getTitle());
+                    WindowStateControl.resetStates(w, currentWindowState);
+                }
+            }
+        }
 
         setJMenuBar(generateMenuBar());
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
     }
 
-    protected WindowAdapter createExitActionListener() {
+    protected WindowAdapter createExitActionListener(ArrayList<JInternalFrame> frames) {
         return new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -57,6 +76,8 @@ public class MainApplicationFrame extends JFrame{
                         "Окно подтверждения",
                         JOptionPane.YES_NO_OPTION);
                 if (result == JOptionPane.YES_OPTION){
+                    var states = WindowStateControl.getState(frames);
+                    WindowStateControl.saveState(states);
                     System.exit(0);
                 }
             }
