@@ -63,3 +63,14 @@ public class WindowStateControl {
         }
     }
 }
+
+class JSONHandler {
+    static HashMap<String, HashMap> initStateFile(String filename){
+        var jsonStatesFile = new File(filename);
+        var states = new HashMap<String, HashMap>();
+        if (jsonStatesFile.exists() && !jsonStatesFile.isDirectory()) {
+            states = WindowStateControl.readState(jsonStatesFile);
+        }
+        return states;
+    }
+}
