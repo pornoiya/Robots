@@ -6,12 +6,16 @@ import org.json.simple.parser.ParseException;
 
 import javax.swing.*;
 import java.beans.PropertyVetoException;
-import java.io.*;
-import java.util.ArrayList;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-public class WindowStateControl {
-    static HashMap<String, HashMap> getState(ArrayList<JInternalFrame> frames) {
+class WindowStateControl {
+    static Map<String, HashMap> getState(List<JInternalFrame> frames) {
         var framesInf = new HashMap<String, HashMap>();
         for (JInternalFrame frame: frames)
         {
@@ -25,7 +29,7 @@ public class WindowStateControl {
         return framesInf;
     }
 
-    static void saveState(HashMap<String, HashMap> windowsInfo){
+    static void saveState(Map<String, HashMap> windowsInfo){
         var data = new JSONObject(windowsInfo);
         try {
             FileWriter jsonWriter = new FileWriter("windowStates.json");
@@ -38,7 +42,7 @@ public class WindowStateControl {
     }
 
 
-    static HashMap<String, HashMap> readState(File statesJson) {
+    private static Map<String, HashMap> readState(File statesJson) {
         JSONParser jsonParser = new JSONParser();
 
         try (FileReader reader = new FileReader(statesJson))
@@ -62,12 +66,10 @@ public class WindowStateControl {
             e.printStackTrace();
         }
     }
-}
 
-class JSONHandler {
-    static HashMap<String, HashMap> initStateFile(String filename){
+    static Map<String, HashMap> initStateFile(String filename){
         var jsonStatesFile = new File(filename);
-        var states = new HashMap<String, HashMap>();
+        Map<String, HashMap> states = new HashMap<>();
         if (jsonStatesFile.exists() && !jsonStatesFile.isDirectory()) {
             states = WindowStateControl.readState(jsonStatesFile);
         }
