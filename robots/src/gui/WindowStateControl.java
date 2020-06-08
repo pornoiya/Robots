@@ -15,22 +15,21 @@ import java.util.List;
 import java.util.Map;
 
 class WindowStateControl {
-    static Map<String, HashMap> getState(List<JInternalFrame> frames) {
-        var framesInf = new HashMap<String, HashMap>();
+    static Map<String, State> getState(List<JInternalFrame> frames) {
+        HashMap<String, State> framesInf = new HashMap<String, State>();
         for (JInternalFrame frame: frames)
         {
-            var frameStateInfo = new HashMap<>();
-            frameStateInfo.put("x", frame.getX());
-            frameStateInfo.put("y", frame.getY());
-            frameStateInfo.put("isMaximized", frame.isMaximum());
-            frameStateInfo.put("isMinimized", frame.isIcon());
-            framesInf.put(frame.getTitle(), frameStateInfo);
+            State state = new State(frame.getX(), frame.getY(),
+                    frame.isIcon(), frame.isMaximum());
+            framesInf.put(frame.getTitle(), state);
         }
         return framesInf;
     }
 
-    static void saveState(Map<String, HashMap> windowsInfo){
-        var data = new JSONObject(windowsInfo);
+    static void saveState(Map<String, State> windowsInfo){
+            Map<String, Map<String, Object>> newData = new HashMap<>();
+            windowsInfo.forEach((key, state) -> newData.put(key, state.toHashMap()));
+        var data = new JSONObject(newData);
         try {
             FileWriter jsonWriter = new FileWriter("windowStates.json");
             data.writeJSONString(jsonWriter);
@@ -42,13 +41,18 @@ class WindowStateControl {
     }
 
 
-    private static Map<String, HashMap> readState(File statesJson) {
+    private static Map<String, State> readState(File statesJson) {
         JSONParser jsonParser = new JSONParser();
 
         try (FileReader reader = new FileReader(statesJson))
         {
             JSONObject obj = (JSONObject)jsonParser.parse(reader);
-            return new HashMap<String, HashMap>(obj);
+            Map<String, HashMap<String, Object>> statesHM = new HashMap<String, HashMap<String, Object>>(obj);
+            Map<String, State> states = new HashMap<>();
+            statesHM.forEach((key, hashmap) -> {
+                states.put(key, State.toState(hashmap));
+            });
+            return states;
 
         } catch (IOException | ParseException e) {
             e.printStackTrace();
@@ -56,20 +60,20 @@ class WindowStateControl {
         }
     }
 
-    static void resetStates(JInternalFrame w, HashMap currentWindowState)
+    static void resetStates(JInternalFrame w, State currentWindowState)
     {
-        w.setLocation((int)(long)currentWindowState.get("x"), (int)(long)currentWindowState.get("y"));
+        w.setLocation((int)(long)currentWindowState.X, (int)(long)currentWindowState.Y);
         try {
-            w.setMaximum((boolean)currentWindowState.get("isMaximized"));
-            w.setIcon((boolean)currentWindowState.get("isMinimized"));
+            w.setMaximum(currentWindowState.IsMaximized);
+            w.setIcon(currentWindowState.IsMinimized);
         } catch (PropertyVetoException e) {
             e.printStackTrace();
         }
     }
 
-    static Map<String, HashMap> initStateFile(String filename){
+    static Map<String, State> initStateFile(String filename){
         var jsonStatesFile = new File(filename);
-        Map<String, HashMap> states = new HashMap<>();
+        Map<String, State> states = new HashMap<>();
         if (jsonStatesFile.exists() && !jsonStatesFile.isDirectory()) {
             states = WindowStateControl.readState(jsonStatesFile);
         }
