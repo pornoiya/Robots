@@ -18,16 +18,16 @@ class State {
 
     HashMap<String, Object> toHashMap(){
         var d = new HashMap<String, Object>();
-        d.put("X", this.X);
-        d.put("Y", this.Y);
-        d.put("IsMinimized", this.IsMinimized);
-        d.put("IsMaximized", this.IsMaximized);
+        d.put("x", this.X);
+        d.put("y", this.Y);
+        d.put("isMinimized", this.IsMinimized);
+        d.put("isMaximized", this.IsMaximized);
         return d;
     }
 
     static State toState(Map<String, Object> map){
-        return new State(((Long)map.get("X")).intValue(), ((Long)map.get("Y")).intValue(),
-                (boolean)map.get("IsMinimized"), (boolean)map.get("IsMaximized"));
+        return new State(((Long)map.get("x")).intValue(), ((Long)map.get("y")).intValue(),
+                (boolean)map.get("isMinimized"), (boolean)map.get("isMaximized"));
     }
 
 }

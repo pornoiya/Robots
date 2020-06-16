@@ -34,7 +34,7 @@ public class MainApplicationFrame extends JFrame{
 
         setContentPane(desktopPane);
 
-        var states = WindowStateControl.initStateFile("windowStates.json");
+        var states = WindowStateControl.initStateFile("windowStates1.json");
 
         LogWindow logWindow = createLogWindow();
         addWindow(logWindow);

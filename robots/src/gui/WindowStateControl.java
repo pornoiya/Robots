@@ -31,7 +31,7 @@ class WindowStateControl {
             windowsInfo.forEach((key, state) -> newData.put(key, state.toHashMap()));
         var data = new JSONObject(newData);
         try {
-            FileWriter jsonWriter = new FileWriter("windowStates.json");
+            FileWriter jsonWriter = new FileWriter("windowStates1.json");
             data.writeJSONString(jsonWriter);
             jsonWriter.close();
         }
