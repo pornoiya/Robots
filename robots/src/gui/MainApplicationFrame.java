@@ -1,13 +1,14 @@
 package gui;
 
-import java.awt.*;
-import java.awt.desktop.SystemEventListener;
-import java.awt.event.*;
-import java.util.Locale;
+import log.Logger;
 
 import javax.swing.*;
-
-import log.Logger;
+import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -16,8 +17,10 @@ import log.Logger;
  * Следует разделить его на серию более простых методов (или вообще выделить отдельный класс).
  *
  */
-public class MainApplicationFrame extends JFrame{
 
+
+public class MainApplicationFrame extends JFrame{
+    private final List<JInternalFrame> windows = new ArrayList<>();
     private final JDesktopPane desktopPane = new JDesktopPane();
 
     public MainApplicationFrame() {
@@ -31,6 +34,7 @@ public class MainApplicationFrame extends JFrame{
 
         setContentPane(desktopPane);
 
+        var states = WindowStateControl.initStateFile("windowStates1.json");
 
         LogWindow logWindow = createLogWindow();
         addWindow(logWindow);
@@ -39,29 +43,28 @@ public class MainApplicationFrame extends JFrame{
         gameWindow.setSize(400,  400);
         addWindow(gameWindow);
 
-        addWindowListener(createExitActionListener());
+        windows.add(gameWindow);
+        windows.add(logWindow);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                exit();
+            }
+        });
+
+        if(states != null){
+            for (JInternalFrame w: windows){
+                if (states.containsKey(w.getTitle())){
+                    var currentWindowState = states.get(w.getTitle());
+                    WindowStateControl.resetStates(w, currentWindowState);
+                }
+            }
+        }
 
         setJMenuBar(generateMenuBar());
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
     }
 
-    protected WindowAdapter createExitActionListener() {
-        return new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                UIManager.put("OptionPane.yesButtonText", "Да");
-                UIManager.put("OptionPane.noButtonText", "Нет");
-                int result = JOptionPane.showConfirmDialog(
-                        null,
-                        "Вы уверенны что хотите выйти?",
-                        "Окно подтверждения",
-                        JOptionPane.YES_NO_OPTION);
-                if (result == JOptionPane.YES_OPTION){
-                    System.exit(0);
-                }
-            }
-        };
-    }
 
     protected LogWindow createLogWindow()
     {
@@ -119,6 +122,8 @@ public class MainApplicationFrame extends JFrame{
                 "Окно подтверждения",
                 JOptionPane.YES_NO_OPTION);
         if (result == JOptionPane.YES_OPTION){
+            var states = WindowStateControl.getState(windows);
+            WindowStateControl.saveState(states);
             System.exit(0);
         }
     }
@@ -168,9 +173,7 @@ public class MainApplicationFrame extends JFrame{
         {
             JMenuItem exitItem = new JMenuItem("Выход");
             exitItem.setSize(0, 0);
-            exitItem.addActionListener((event) -> {
-                exit();
-            });
+            exitItem.addActionListener((event) -> exit());
             appManageMenu.add(exitItem);
         }
 
